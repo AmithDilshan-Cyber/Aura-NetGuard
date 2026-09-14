@@ -57,6 +57,13 @@ flowchart LR
     G -.->|operator feedback| F
 ```
 
+## Requirements
+
+**Python 3.10 – 3.12.** The pinned scientific stack (numpy, scikit-learn,
+shap) has no prebuilt wheels for Python 3.13+, so pip falls back to compiling
+from source and fails. If `python --version` reports 3.13 or newer, install
+3.12 alongside it and invoke that interpreter explicitly.
+
 ## Quick start
 
 ```bash
@@ -67,8 +74,31 @@ python -m backend.app.ml.train        # train the model (~2 min)
 uvicorn backend.app.main:app --reload
 ```
 
-Open http://localhost:8000. The simulated fleet starts immediately and the
-first predicted-failure alerts usually appear within a couple of minutes.
+<details>
+<summary><b>Windows</b></summary>
+
+```cmd
+py -3.12 -m pip install -r requirements.txt
+py -3.12 -m backend.app.ml.train
+py -3.12 -m uvicorn backend.app.main:app --port 8000
+```
+
+`py -3.12` selects the right interpreter even with several installed. If
+`python` opens the Microsoft Store instead of running, either use `py` or
+turn off the Python app execution aliases in Settings → Apps → Advanced app
+settings.
+
+**Avoid apostrophes and spaces in the project path.** A path such as
+`C:\Users\Amith's PC\...` breaks the meson build backend that some packages
+use (`Malformed value in machine file variable`). Clone somewhere like
+`C:\Aura-NetGuard` instead.
+
+</details>
+
+Open http://localhost:8000 **in a browser** — the simulated fleet starts
+immediately, and the first predicted-failure alerts usually appear within a
+couple of minutes while the simulator develops a fault. Keep the terminal
+open; closing it stops the server.
 
 The trained model is not committed to the repository (it is a ~12 MB binary),
 so the training step is required on a fresh clone. Without it the app still
@@ -186,6 +216,20 @@ backend/tests/         pytest suite
 docs/real-data.md      real-network deployment guide
 RESEARCH.md            research write-up
 ```
+
+## Troubleshooting
+
+| Symptom | Cause and fix |
+|---|---|
+| `metadata-generation-failed` building numpy | Python 3.13+ — see [Requirements](#requirements) |
+| `Malformed value in machine file variable 'python'` | An apostrophe or space in the project path; clone to `C:\Aura-NetGuard` |
+| `Python was not found` (Windows) | The Microsoft Store alias is shadowing Python; use `py` or disable the alias |
+| `No module named 'joblib'` / `'uvicorn'` | `pip install -r requirements.txt` did not complete — scroll up for its real error |
+| `No module named 'backend'` | Run from the repository root, the directory containing `backend/` |
+| Dashboard loads, `Model: not trained` | Run `python -m backend.app.ml.train` first |
+| Dashboard loads but no alerts | Normal — wait 1–3 minutes for the simulator to develop a fault |
+| `ERR_CONNECTION_REFUSED` | Wrong port, or the server is not running; the terminal should show `Uvicorn running on ...` |
+| Charts missing, everything else fine | The Chart.js CDN is unreachable from this network; the rest of the dashboard still works |
 
 ## Status and limitations
 
