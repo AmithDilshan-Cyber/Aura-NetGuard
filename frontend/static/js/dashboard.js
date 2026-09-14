@@ -95,7 +95,8 @@ function renderAlerts(alerts) {
   $("#alerts-feed").innerHTML = active
     .map((a) => {
       const causes = (a.causes || [])
-        .map((c) => `<li>${esc(c.label)} <span class="val">${fmt(c.value)}${esc(c.unit)}</span></li>`)
+        // 2dp to match the value quoted in the summary sentence above
+        .map((c) => `<li>${esc(c.label)} <span class="val">${fmt(c.value, 2)}${esc(c.unit)}</span></li>`)
         .join("");
       const actions = (a.recommended_actions || []).map((x) => `<li>${esc(x)}</li>`).join("");
       const eta = a.eta_minutes === null || a.eta_minutes === undefined
