@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+backend/app/ml/model_store/*.joblib
+backend/data/*.db
+*.log
+.DS_Store
+node_modules/
