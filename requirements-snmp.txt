@@ -1,0 +1,4 @@
+# Optional: only needed to poll real devices (AURA_COLLECTOR=snmp).
+# The simulator path needs nothing from this file.
+-r requirements.txt
+pysnmp==6.2.5

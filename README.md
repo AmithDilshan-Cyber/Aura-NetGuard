@@ -82,6 +82,12 @@ backend/app/
     explain.py         SHAP -> root cause, plain-language summary, ETA, actions
     engine.py          severity scoring, de-duplication, cooldown, feedback
     models.py          Alert data model + severity thresholds
+  collectors/
+    base.py            Collector protocol + env-based selection
+    counters.py        SNMP counter -> rate, with wrap/reset detection
+    icmp.py            active latency/jitter/loss probing
+    inventory.py       device inventory + OID profiles
+    snmp.py            SNMP collector (scaffold; see docs/real-data.md)
   db.py                SQLite persistence for metrics + alerts/feedback
   state.py             in-process runtime state
   api/routes.py        REST API
@@ -93,8 +99,18 @@ RESEARCH.md            full research write-up
 
 ## Applying this to a real network
 
-The simulator sits behind a single interface (`FleetSimulator.step()`
-producing metric snapshots), so it can be replaced with a real SNMP,
-NetFlow, or Prometheus collector without touching the model, explainer,
-alert engine, or dashboard — see §8 of `RESEARCH.md` for the adapter
-pattern.
+The simulator sits behind a single `Collector` interface, so it can be
+replaced with real telemetry without touching the model, explainer, alert
+engine, or dashboard. An SNMP + ICMP collector is included:
+
+```bash
+pip install -r requirements-snmp.txt
+cp config/devices.example.json config/devices.json   # then edit
+export AURA_SNMP_COMMUNITY='your-read-only-community'
+AURA_COLLECTOR=snmp uvicorn backend.app.main:app
+```
+
+**Read [`docs/real-data.md`](docs/real-data.md) first.** It covers the SNMP
+counter pitfalls that cause false alerts, why the shipped model will not
+work on real telemetry as-is, and the labelling problem that decides whether
+prediction is feasible on your network at all.

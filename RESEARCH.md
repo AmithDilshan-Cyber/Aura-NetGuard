@@ -333,9 +333,33 @@ touching the model, explainer, alert engine, or dashboard:
 Because feature engineering, model input schema, and alert engine are all
 decoupled from the simulator, plugging in a real collector means writing an
 adapter that emits the same per-metric fields — the predictive and
-human-centred-alerting logic needs no change. Any device class with
-pollable health telemetry can then be onboarded by adding its baseline
-profile and retraining on real historical incident data.
+human-centred-alerting logic needs no change.
+
+**An SNMP + ICMP collector is implemented** (`backend/app/collectors/`),
+selected with `AURA_COLLECTOR=snmp`. Its rate conversion, inventory
+handling and snapshot assembly are covered by tests; the pysnmp transport
+itself has not been validated against physical hardware. Full deployment
+guide: [`docs/real-data.md`](docs/real-data.md).
+
+Two findings from building it are worth recording, because they are
+properties of real telemetry that the simulator does not expose:
+
+1. **SNMP counters are totals, not rates, and resets are indistinguishable
+   from rollovers by value alone.** A device reboot sets `ifInErrors` back
+   to zero, which looks identical to a Counter32 wrap; treating one as the
+   other manufactures a massive error spike and a false critical alert. The
+   implementation resolves this using `sysUpTime` (authoritative) with a
+   rate-plausibility fallback, and discards any interval it cannot trust —
+   a data gap being far cheaper than a fabricated incident.
+
+2. **Real collectors cannot produce training labels.** `failure_event` is
+   ground truth the simulator knows and a poller fundamentally does not.
+   Supervised retraining therefore depends on an external label source
+   (syslog link-down events, ticket history, up/down records), and on that
+   source containing enough failures to learn from — which, on a
+   well-managed network, it may not. This is the principal obstacle to
+   moving this work onto real infrastructure, and it is a data-availability
+   problem rather than a modelling one.
 
 ## 9. Limitations & Threats to Validity
 

@@ -1,4 +1,4 @@
-"""In-process runtime state: the live fleet simulator, rolling metric history
+"""In-process runtime state: the telemetry collector, rolling metric history
 per device, and the alert engine. A single instance lives on
 `app.state.runtime` for the lifetime of the FastAPI process.
 """
@@ -10,15 +10,16 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from .alerts.engine import AlertEngine
+from .collectors.base import Collector, build_collector
 from .features import WINDOW_STEPS
-from .simulator import Device, FleetSimulator, build_fleet
+from .simulator import Device
 
 CHART_HISTORY_LEN = 240  # 2 hours of 30s ticks kept in memory for the dashboard
 
 
 @dataclass
 class RuntimeState:
-    fleet: FleetSimulator
+    collector: Collector
     devices_by_id: dict[str, Device]
     history: dict[str, deque] = field(default_factory=dict)
     latest: dict[str, dict] = field(default_factory=dict)
@@ -28,12 +29,12 @@ class RuntimeState:
 
     @classmethod
     def create(cls, n_devices: int = 14, seed: int = 7) -> "RuntimeState":
-        devices = build_fleet(n_devices=n_devices, seed=seed)
+        collector = build_collector(n_devices=n_devices, seed=seed)
         state = cls(
-            fleet=FleetSimulator(devices, seed=seed),
-            devices_by_id={d.device_id: d for d in devices},
+            collector=collector,
+            devices_by_id={d.device_id: d for d in collector.devices},
         )
-        for device in devices:
+        for device in collector.devices:
             state.history[device.device_id] = deque(maxlen=CHART_HISTORY_LEN)
         return state
 

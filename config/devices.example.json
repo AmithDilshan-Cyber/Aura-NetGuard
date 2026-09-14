@@ -1,0 +1,42 @@
+{
+  "_comment": [
+    "Copy to config/devices.json and edit. Credentials are NOT stored here:",
+    "each device names an environment variable holding its SNMP community",
+    "string, so this file stays safe to commit.",
+    "",
+    "  export AURA_SNMP_COMMUNITY='your-read-only-community'",
+    "  export AURA_COLLECTOR=snmp",
+    "",
+    "device_type must be one of the five types the model was trained on:",
+    "core-router, edge-switch, access-point, firewall, load-balancer.",
+    "",
+    "interfaces lists the ifIndex values to poll. Find them with:",
+    "  snmpwalk -v2c -c <community> <host> 1.3.6.1.2.1.2.2.1.2"
+  ],
+  "devices": [
+    {
+      "device_id": "dev-001",
+      "name": "core-rtr-main",
+      "device_type": "core-router",
+      "site": "Main-Campus",
+      "host": "10.0.0.1",
+      "interfaces": [1, 2],
+      "snmp_version": "2c",
+      "oid_profile": "cisco",
+      "community_env": "AURA_SNMP_COMMUNITY"
+    },
+    {
+      "device_id": "dev-002",
+      "name": "lib-switch-01",
+      "device_type": "edge-switch",
+      "site": "Library",
+      "host": "10.0.1.20",
+      "interfaces": [1],
+      "oid_profile": "generic",
+      "oid_overrides": {
+        "cpu_pct": "1.3.6.1.4.1.14988.1.1.3.14.0",
+        "temperature_c": "1.3.6.1.4.1.14988.1.1.3.10.0"
+      }
+    }
+  ]
+}
