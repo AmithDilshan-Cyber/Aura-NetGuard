@@ -67,7 +67,7 @@ def _run_tick(runtime: RuntimeState, predictor) -> None:
     now = datetime.utcnow()
     runtime.ticks += 1
 
-    for snapshot in runtime.fleet.step():
+    for snapshot in runtime.collector.step():
         row = snapshot.to_dict()
         runtime.record(row)
         db.insert_metric(row)
